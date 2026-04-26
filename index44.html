@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyundai Ioniq 5 calculator</title>
+
+<!-- ===== PWA META ===== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#07141c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ioniq 5">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+:root{
+  --red:#ff3b30;
+  --yellow:#ffd60a;
+  --green:#34c759;
+  --blue:#3fdcff;
+  --panel:rgba(15,29,38,0.92);
+}
+
+/* ===== GLOBAL ===== */
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial,sans-serif;
+  background:#07141c url("background.jpg") center/cover fixed;
+  color:#eafaff;
+}
+.container{max-width:900px;margin:0 auto;padding:24px}
+
+/* ===== HEADER ===== */
+h1{margin:0;line-height:1.1}
+.hyundai{color:var(--red);font-size:38px;font-weight:700}
+.ioniq{color:var(--blue);font-size:36px;font-weight:700}
+.ioniq .five{color:var(--red)}
+
+/* ===== LOGO ===== */
+.logo{
+  margin:14px 0;
+  font-family:'Segoe Script','Comic Sans MS',cursive;
+  font-size:20px;
+  color:#7cf3ff;
+  animation:flip 4s infinite;
+}
+@keyframes flip{
+  0%{transform:rotateX(0deg)}
+  50%{transform:rotateX(180deg)}
+  100%{transform:rotateX(360deg)}
+}
+
+/* ===== IMAGE ===== */
+.car img{
+  width:100%;
+  filter:drop-shadow(0 10px 25px rgba(0,255,255,.25));
+}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--panel);
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:28px;
+  box-shadow:0 25px 50px rgba(0,0,0,.6);
+}
+.card h2{margin:0 0 14px;color:#7cf3ff}
+
+/* ===== FORM ===== */
+label{display:block;font-size:13px;margin-top:8px}
+input{
+  width:20ch;
+  padding:6px;
+  background:#091720;
+  border:1px solid #2b3f52;
+  border-radius:8px;
+  color:#fff;
+}
+button{
+  margin-top:12px;
+  padding:8px 16px;
+  border-radius:12px;
+  border:1px solid var(--yellow);
+  background:transparent;
+  color:var(--yellow);
+  cursor:pointer;
+}
+
+/* ===== RESULT ===== */
+.resultBox{
+  min-width:230px;
+  border:1px solid #7cf3ff;
+  padding:12px;
+  border-radius:12px;
+  white-space:pre-line;
+}
+
+/* ===== SLIDER ===== */
+.range{
+  width:260px;
+  appearance:none;
+  height:10px;
+  border-radius:6px;
+  background:linear-gradient(90deg,var(--red),var(--yellow),var(--green));
+}
+.range::-webkit-slider-thumb{
+  appearance:none;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#fff;
+  border:2px solid #17242e;
+  cursor:pointer;
+}
+
+/* ===== LOGBOOK ===== */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:16px;
+}
+th,td{
+  border:1px solid #2b3f52;
+  padding:8px;
+  text-align:center;
+}
+th{color:#7cf3ff}
+.delBtn{
+  border:1px solid var(--red);
+  color:var(--red);
+  background:transparent;
+  border-radius:8px;
+  cursor:pointer;
+}
+.summary{
+  margin-top:12px;
+  font-size:13px;
+  border:1px dashed #2b3f52;
+  padding:10px;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>
+  <div class="hyundai">Hyundai</div>
+  <div class="ioniq">Ioniq <span class="five">5</span> calculator</div>
+</h1>
+
+<div class="logo">Designed by Duky</div>
+
+<div class="car">
+  <img src="ioniq5-blue.png" alt="Hyundai Ioniq 5">
+</div>
+
+<!-- ================= KALKULAČKA ================= -->
+<div id="calculatorView">
+
+<!-- DOJAZD -->
+<div class="card">
+<h2>Dojazd</h2>
+
+<label>Batéria (%) – 100 % = 77 kWh</label>
+<input type="range" id="batPct" class="range" min="0" max="100" value="80"
+ oninput="updateLabel('batPct','batPctVal')">
+<span id="batPctVal">80 %</span>
+
+<label>Spotreba (kWh / 100 km)</label>
+<input id="consRange">
+
+<button onclick="calcRange()">Vypočítať dojazd</button>
+<div class="resultBox" id="rangeRes"></div>
+</div>
+
+<!-- DOMÁCA JAZDA -->
+<div class="card">
+<h2>Náklady – domáca jazda</h2>
+
+<label>Batéria pred jazdou (%)</label>
+<input type="range" id="batStart" class="range" min="0" max="100" value="100"
+ oninput="updateLabel('batStart','batStartVal')">
+<span id="batStartVal">100 %</span>
+
+<label>Batéria po jazde (%)</label>
+<input type="range" id="batEnd" class="range" min="0" max="100" value="100"
+ oninput="updateLabel('batEnd','batEndVal')">
+<span id="batEndVal">100 %</span>
+
+<label>Vzdialenosť (km)</label>
+<input id="dist">
+
+<label>Voľné kWh (zadarmo)</label>
+<input id="freeKwh" placeholder="0">
+
+<div class="resultBox"><b>Cena elektriny: 0,33 € / kWh</b></div>
+
+<button onclick="calcHome()">Vypočítať</button>
+<div class="resultBox" id="costRes"></div>
+</div>
+
+<button onclick="openLogbook()">📘 Kniha jázd</button>
+</div>
+
+<!-- ================= KNIHA JÁZD ================= -->
+<div id="logbookView" style="display:none">
+
+<div class="card">
+<h2>📘 Mesačná kniha jázd</h2>
+<p>Východiskový stav tachometra: <b>32 000 km</b></p>
+
+<label>Index</label><input id="lb_i">
+<label>Mesiac</label><input id="lb_m">
+<label>Stav tachometra (km)</label><input id="lb_o">
+<label>Spotrebovaná energia (kWh)</label><input id="lb_k">
+
+<button onclick="addLog()">Pridať záznam</button>
+<button onclick="backToCalc()">⬅ Späť</button>
+
+<table>
+<thead>
+<tr>
+<th>#</th><th>Mesiac</th><th>Stav km</th>
+<th>Prejdené km</th><th>kWh</th><th>Priemer</th><th></th>
+</tr>
+</thead>
+<tbody id="logBody"></tbody>
+</table>
+
+<div class="summary" id="logSummary"></div>
+</div>
+</div>
+
+</div>
+
+<script>
+/* ===== KONŠTANTY ===== */
+const BAT = 77;
+const HOME_PRICE = 0.33;
+
+/* ===== LABEL ===== */
+function updateLabel(id,lbl){
+  document.getElementById(lbl).innerText =
+    document.getElementById(id).value + " %";
+}
+
+/* ===== DOJAZD ===== */
+function calcRange(){
+  const pct  = +batPct.value;
+  const cons = +consRange.value;
+
+  if(!cons || cons <= 0){
+    rangeRes.innerText =
+      "Zadaj spotrebu (kWh / 100 km), aby bolo možné vypočítať dojazd.";
+    return;
+  }
+  const kwh = BAT * (pct / 100);
+  const km  = kwh / (cons / 100);
+  rangeRes.innerText =
+`Dojazd: ${km.toFixed(0)} km
+Zostáva: ${kwh.toFixed(1)} kWh`;
+}
+
+/* ===== DOMÁCA JAZDA (PÔVODNÁ LOGIKA) ===== */
+function calcHome(){
+  const distKm = +dist.value;
+  const cons   = +consRange.value;
+  const free   = +freeKwh.value || 0;
+
+  const kwhKm  = distKm * (cons / 100);
+  const kwhPct = ((+batStart.value - +batEnd.value) / 100) * BAT;
+
+  if(+batEnd.value > +batStart.value){
+    costRes.innerText="Nemôžeš mať viac kapacity ako pred jazdou.";
+    return;
+  }
+
+  if(distKm === 0){
+    let price = kwhPct * HOME_PRICE - free * HOME_PRICE;
+    if(price < 0) price = 0;
+    const distPct = kwhPct / (cons / 100);
+    costRes.innerText =
+`Spotrebovaná energia podľa percent: ${kwhPct.toFixed(2)} kWh
+Vzdialenosť podľa percent: ${distPct.toFixed(0)} km
+Cena: ${price.toFixed(2)} €`;
+    return;
+  }
+
+  if(kwhPct === 0){
+    let price = kwhKm * HOME_PRICE - free * HOME_PRICE;
+    if(price < 0) price = 0;
+    costRes.innerText =
+`Spotrebovaná energia: ${kwhKm.toFixed(2)} kWh
+Cena: ${price.toFixed(2)} €
+Reálna vzdialenosť: ${distKm} km`;
+    return;
+  }
+
+  const distPct  = kwhPct / (cons / 100);
+  const realCons = (kwhPct / distKm) * 100;
+  let price = kwhPct * HOME_PRICE - free * HOME_PRICE;
+  if(price < 0) price = 0;
+
+  costRes.innerText =
+`Spotrebovaná energia podľa km: ${kwhKm.toFixed(2)} kWh
+Spotrebovaná energia podľa percent: ${kwhPct.toFixed(2)} kWh
+Vzdialenosť (reálna): ${distKm} km
+Vzdialenosť podľa percent: ${distPct.toFixed(0)} km
+Reálna spotreba: ${realCons.toFixed(2)} kWh / 100 km
+Cena: ${price.toFixed(2)} €`;
+}
+
+/* ===== PREPÍNANIE ===== */
+function openLogbook(){
+  calculatorView.style.display="none";
+  logbookView.style.display="block";
+}
+function backToCalc(){
+  logbookView.style.display="none";
+  calculatorView.style.display="block";
+}
+
+/* ===== KNIHA JÁZD ===== */
+const START_KM = 32000;
+let logs = JSON.parse(localStorage.getItem("ioniq_logbook")) || [];
+
+function addLog(){
+  logs.push({
+    i:+lb_i.value,
+    m:lb_m.value,
+    o:+lb_o.value,
+    k:+lb_k.value
+  });
+  localStorage.setItem("ioniq_logbook", JSON.stringify(logs));
+  renderLog();
+}
+
+function delLog(i){
+  logs.splice(i,1);
+  localStorage.setItem("ioniq_logbook", JSON.stringify(logs));
+  renderLog();
+}
+
+function renderLog(){
+  logs.sort((a,b)=>a.i-b.i);
+  let prev = START_KM, sumKm = 0, sumKwh = 0, html = "";
+  logs.forEach((r,i)=>{
+    const km = r.o - prev;
+    const avg = km > 0 ? (r.k / km * 100).toFixed(2) : "—";
+    sumKm += km; sumKwh += r.k;
+    html += `<tr>
+<td>${r.i}</td><td>${r.m}</td><td>${r.o}</td>
+<td>${km}</td><td>${r.k}</td><td>${avg}</td>
+<td><button class="delBtn" onclick="delLog(${i})">🗑️</button></td>
+</tr>`;
+    prev = r.o;
+  });
+  logBody.innerHTML = html;
+  logSummary.innerText =
+`Celkovo km: ${sumKm}
+Celkovo kWh: ${sumKwh.toFixed(1)}
+Priemer: ${(sumKwh / sumKm * 100 || 0).toFixed(2)} kWh / 100 km`;
+}
+
+/* ===== SERVICE WORKER ===== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js");
+  });
+}
+
+renderLog();
+</script>
+
+</body>
+</html>
